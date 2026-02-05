@@ -11,3 +11,11 @@ export const RegisterUserSchema = z
   .strict();
 
 export type RegisterUserDTO = z.infer<typeof RegisterUserSchema>;
+
+// For login
+export const LoginUserSchema = z.object({
+  email: z.string().email(),
+  password: z.string(),
+});
+
+export type LoginUserDTO = z.infer<typeof LoginUserSchema>;

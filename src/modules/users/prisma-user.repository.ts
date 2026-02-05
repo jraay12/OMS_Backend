@@ -13,7 +13,7 @@ export class PrismaUserRepository implements UserRepository {
         is_verified: user.isVerified,
         role: user.role,
         created_at: user.createdAt,
-        updated_at: user.updatedAt
+        updated_at: user.updatedAt,
       },
     });
   }
@@ -29,5 +29,29 @@ export class PrismaUserRepository implements UserRepository {
   async findById(id: string): Promise<User | null> {
     const user = await prisma.user.findUnique({ where: { id } });
     return user ? User.fromPrisma(user) : null;
+  }
+
+  async isEmailVerified(email: string): Promise<boolean> {
+    const verifiedUser = await prisma.user.findUnique({
+      where: {
+        email,
+        is_verified: true,
+      },
+    });
+
+    return verifiedUser ? true : false;
+  }
+
+  async storeRefreshToken(user_id: string, token: string): Promise<void> {
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 7);
+
+    await prisma.session.create({
+      data: {
+        user_id,
+        token,
+        expires_at: expiresAt,
+      },
+    });
   }
 }
