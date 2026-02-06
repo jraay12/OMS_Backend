@@ -49,4 +49,31 @@ export class UserService {
 
     return { accessToken, refreshToken };
   }
+
+  async refreshToken(
+    oldRefreshToken: string,
+  ): Promise<{ accessToken: string; newRefreshToken: string }> {
+    const payload = this.jwtUtils.verifyRefreshToken(oldRefreshToken);
+
+    const session = await this.userRepo.findByToken(oldRefreshToken);
+
+    if (!session) throw new Error("Invalid refresh token");
+
+    if (session.expiresAt < new Date()) {
+      throw new Error("Refresh token expired");
+    }
+
+    const accessToken = this.jwtUtils.generate(
+      session.user!.id,
+      session.user!.role,
+    );
+
+    const newRefreshToken = this.jwtUtils.generateRefreshToken(
+      session.user!.id,
+    );
+
+    await this.userRepo.rotateRefreshToken(session.id, newRefreshToken);
+
+    return { accessToken, newRefreshToken };
+  }
 }

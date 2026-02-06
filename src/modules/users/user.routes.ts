@@ -17,5 +17,6 @@ const userController = new UserController(userService);
 
 routes.post("/register", userController.register);
 routes.post("/login", userController.login);
+routes.post('/refresh-token', userController.refresh)
 
 export default routes;

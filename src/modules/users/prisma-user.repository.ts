@@ -1,4 +1,5 @@
 import { prisma } from "../../prisma/prismaClient";
+import { RefreshToken } from "./refreshToken.entity";
 import { User } from "./user.entity";
 import { UserRepository } from "./user.repository";
 
@@ -53,5 +54,45 @@ export class PrismaUserRepository implements UserRepository {
         expires_at: expiresAt,
       },
     });
+  }
+
+  async findByToken(token: string): Promise<RefreshToken | null> {
+    const exisitngToken = await prisma.session.findUnique({
+      include: {
+        user: true,
+      },
+      where: {
+        token,
+      },
+    });
+
+    return exisitngToken ? RefreshToken.fromPrisma(exisitngToken) : null;
+  }
+
+  async deleteToken(token: string): Promise<void> {
+    await prisma.session.delete({
+      where: {
+        token,
+      },
+    });
+  }
+
+  async rotateRefreshToken(
+    sessionId: string,
+    newToken: string,
+  ): Promise<RefreshToken> {
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 7); // 7 days
+
+    const updatedSession = await prisma.session.update({
+      where: { id: sessionId },
+      data: {
+        token: newToken,
+        expires_at: expiresAt,
+      },
+      include: { user: true },
+    });
+
+    return RefreshToken.fromPrisma(updatedSession);
   }
 }

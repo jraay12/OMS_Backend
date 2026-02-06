@@ -1,4 +1,4 @@
-import jwt, { SignOptions, Secret } from "jsonwebtoken";
+import jwt, { SignOptions, Secret, JwtPayload } from "jsonwebtoken";
 
 export class JWTServices {
   constructor(
@@ -24,7 +24,19 @@ export class JWTServices {
     return jwt.sign({ userId }, this.refreshTokenSecret, options);
   }
 
-  verify(token: string): any {
-    return jwt.verify(token, this.secret);
+  verifyRefreshToken(token: string): JwtPayload {
+    try {
+      return jwt.verify(token, this.refreshTokenSecret) as JwtPayload;
+    } catch (err) {
+      throw new Error("Invalid or expired token");
+    }
+  }
+
+   verifyAccessToken(token: string): JwtPayload {
+    try {
+      return jwt.verify(token, this.secret) as JwtPayload;
+    } catch (err) {
+      throw new Error("Invalid or expired token");
+    }
   }
 }
